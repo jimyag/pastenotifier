@@ -17,16 +17,14 @@ type PasteNotifier struct {
 }
 
 func (pn *PasteNotifier) Register(h Handler) {
+	if pn.handlers == nil {
+		pn.handlers = make([]Handler, 0)
+	}
 	pn.handlers = append(pn.handlers, h)
 }
 
-var PN *PasteNotifier
-
-func init() {
-	clipText := clipboard.Watch(context.Background(), clipboard.FmtText)
-	PN = &PasteNotifier{
-		clipText: clipText,
-	}
+var PN *PasteNotifier = &PasteNotifier{
+	clipText: clipboard.Watch(context.Background(), clipboard.FmtText),
 }
 
 func Run() {
@@ -39,16 +37,18 @@ func Run() {
 			return
 		case clipText := <-PN.clipText:
 			for _, h := range PN.handlers {
-				title, message, err := h.Handle(string(clipText))
-				if err != nil {
-					log.Error(err).Msg("handle error")
-				}
-				if title != "" && message != "" {
-					if err = beeep.Notify(title, message, ""); err != nil {
-						log.Error(err).Str("title", title).Str("message", message).Msg("notify error")
+				go func() {
+					title, message, err := h.Handle(string(clipText))
+					if err != nil {
+						log.Error(err).Msg("handle error")
 					}
+					if title != "" && message != "" {
+						if err = beeep.Notify(title, message, ""); err != nil {
+							log.Error(err).Str("title", title).Str("message", message).Msg("notify error")
+						}
 
-				}
+					}
+				}()
 			}
 		}
 	}

@@ -1,3 +1,4 @@
 .vscode
 internal/custom.go
 bin
+custom

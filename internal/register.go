@@ -1,6 +1,8 @@
 package internal
 
-import "github.com/jimyag/pastenotifier/handle"
+import (
+	"github.com/jimyag/pastenotifier/handle"
+)
 
 func init() {
 	PN.Register(&handle.Timestamp{})
